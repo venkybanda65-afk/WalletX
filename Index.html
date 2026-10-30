@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WalletX — Digital Wallet Simulation</title>
+<style>
+:root{--bg:#0b1020;--panel:#141c31;--panel2:#1a2540;--text:#f4f7ff;--muted:#9ba8c7;--blue:#6c7cff;--cyan:#41d6c3;--red:#ff7185;--line:#293553}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#1c2850 0,#0b1020 45%);color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100vh}
+button,input{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:12px 15px;font-weight:700;background:var(--blue);color:white}button:disabled{opacity:.5;cursor:not-allowed}.secondary{background:#273452;color:var(--text)}.danger{background:#542637;color:#ffdce2}
+.wrap{max-width:980px;margin:auto;padding:22px 15px 50px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:25px}.brand{font-size:24px;font-weight:900;letter-spacing:-1px}.brand span{color:var(--cyan)}.pill{color:var(--cyan);font-size:12px;border:1px solid #2c756f;border-radius:99px;padding:7px 10px}
+h1{font-size:clamp(25px,6vw,38px);margin:8px 0}p{color:var(--muted);line-height:1.5}.card{background:linear-gradient(145deg,rgba(26,37,64,.96),rgba(17,25,45,.96));border:1px solid var(--line);border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 12px 35px #0002}.auth{max-width:470px;margin:35px auto}.tabs{display:flex;gap:8px;margin:18px 0}.tabs button{flex:1}.field{display:block;margin:14px 0}.field span{display:block;color:var(--muted);font-size:13px;margin-bottom:7px}.field input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#0c1428;color:var(--text);outline:none}.field input:focus{border-color:var(--blue)}.full{width:100%}.msg{font-size:14px;min-height:20px;margin-top:10px;color:var(--cyan)}.error{color:var(--red)}.balance{background:linear-gradient(120deg,#5368f5,#784fe0);border:0;position:relative;overflow:hidden}.balance:after{content:"";position:absolute;width:170px;height:170px;border:35px solid #ffffff15;border-radius:50%;right:-35px;top:-65px}.eyebrow{font-size:13px;color:#e0e4ff}.amount{font-size:clamp(32px,8vw,48px);font-weight:900;margin:10px 0 18px;letter-spacing:-1px}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#0d1529;border-radius:14px;padding:14px}.stat small{display:block;color:var(--muted);margin-bottom:7px}.stat strong{font-size:18px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px}.section-title h2{font-size:19px}.transaction{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.transaction:last-child{border-bottom:0}.tx-icon{width:42px;height:42px;display:grid;place-items:center;background:#263251;border-radius:13px;font-size:20px}.tx-main{flex:1;min-width:0}.tx-main strong{display:block;overflow-wrap:anywhere}.tx-main small{display:block;color:var(--muted);margin-top:5px}.positive{color:var(--cyan)}.negative{color:#ff9baa}.hidden{display:none!important}.note{font-size:12px;color:var(--muted);text-align:center;margin-top:20px}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav button{background:#202c48}.nav button.active{background:var(--blue)}.view{display:none}.view.active{display:block}.empty{padding:25px;text-align:center;color:var(--muted)}.smallbtn{padding:8px 10px;font-size:12px}
+@media(max-width:520px){.wrap{padding:16px 12px 35px}.card{padding:16px}.stats{grid-template-columns:1fr}.top{align-items:flex-start}.pill{max-width:145px;text-align:center}.amount{font-size:35px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Wallet<span>X</span></div>
+    <div class="pill">COLLEGE PROJECT · DEMO ONLY</div>
+  </header>
+
+  <section id="authScreen" class="card auth">
+    <h1>Your money, simulated.</h1>
+    <p>Create a demo account or sign in to explore WalletX. No real payments are made.</p>
+    <div class="tabs">
+      <button id="loginTab" onclick="showAuthMode('login')">Log in</button>
+      <button id="registerTab" class="secondary" onclick="showAuthMode('register')">Register</button>
+    </div>
+    <form id="authForm">
+      <label class="field" id="nameField"><span>Display name</span><input id="displayName" autocomplete="nickname" placeholder="e.g. Alex" maxlength="40"></label>
+      <label class="field"><span>Username</span><input id="username" autocomplete="username" placeholder="Choose a username" required minlength="3" maxlength="24"></label>
+      <label class="field"><span>Password (demo only)</span><input id="password" type="password" autocomplete="current-password" placeholder="At least 4 characters" required minlength="4" maxlength="100"></label>
+      <button class="full" id="authSubmit" type="submit">Log in</button>
+      <div id="authMessage" class="msg" role="status"></div>
+    </form>
+    <p class="note">Demo warning: this learning version stores data in this browser only. Do not use a real password or real financial information.</p>
+  </section>
+
+  <main id="appScreen" class="hidden">
+    <div class="section-title">
+      <div><p style="margin:0">Welcome back,</p><h1 id="welcomeName">Wallet user</h1></div>
+      <button class="secondary smallbtn" onclick="logout()">Log out</button>
+    </div>
+    <section class="card balance">
+      <div class="eyebrow">YOUR SIMULATED WALLET BALANCE</div>
+      <div class="amount" id="balance">₹0.00</div>
+      <div class="row">
+        <button onclick="openView('add')">＋ Add money</button>
+        <button class="secondary" onclick="openView('send')">↗ Send money</button>
+      </div>
+    </section>
+    <section class="stats">
+      <div class="stat"><small>Money added</small><strong id="totalAdded">₹0</strong></div>
+      <div class="stat"><small>Money sent</small><strong id="totalSent">₹0</strong></div>
+      <div class="stat"><small>Transactions</small><strong id="txCount">0</strong></div>
+    </section>
+    <div class="nav" style="margin:18px 0">
+      <button class="active" data-view="home" onclick="openView('home')">Overview</button>
+      <button data-view="add" onclick="openView('add')">Add money</button>
+      <button data-view="send" onclick="openView('send')">Send money</button>
+      <button data-view="history" onclick="openView('history')">History</button>
+    </div>
+
+    <section id="view-home" class="view active card">
+      <div class="section-title"><h2>Recent transactions</h2><button class="secondary smallbtn" onclick="openView('history')">See all</button></div>
+      <div id="recentList"></div>
+    </section>
+    <section id="view-add" class="view card">
+      <h2>Add virtual money</h2><p>This adds pretend money to your WalletX balance. It does not charge any payment method.</p>
+      <form id="addForm">
+        <label class="field"><span>Amount (₹)</span><input id="addAmount" type="number" min="1" max="100000" step="1" placeholder="e.g. 500" required></label>
+        <button type="submit" class="full">Add to demo wallet</button><div id="addMessage" class="msg" role="status"></div>
+      </form>
+    </section>
+    <section id="view-send" class="view card">
+      <h2>Send simulated payment</h2><p>Enter any demo recipient name. This will only update your own simulated balance and transaction list.</p>
+      <form id="sendForm">
+        <label class="field"><span>Recipient name</span><input id="recipient" maxlength="50" placeholder="e.g. Sam" required></label>
+        <label class="field"><span>Amount (₹)</span><input id="sendAmount" type="number" min="1" max="100000" step="1" placeholder="e.g. 200" required></label>
+        <label class="field"><span>Note (optional)</span><input id="sendNote" maxlength="80" placeholder="e.g. Lunch"></label>
+        <button type="submit" class="full">Confirm simulated payment</button><div id="sendMessage" class="msg" role="status"></div>
+      </form>
+    </section>
+    <section id="view-history" class="view card">
+      <div class="section-title"><h2>Transaction history</h2><button class="secondary smallbtn" onclick="exportHistory()">Export CSV</button></div>
+      <div id="historyList"></div>
+    </section>
+    <section class="card">
+      <h2 style="font-size:17px">Project controls</h2>
+      <p>Reset this demo account's wallet balance and transaction history to the starting state.</p>
+      <button class="danger" onclick="resetWallet()">Reset demo wallet</button>
+    </section>
+  </main>
+  <footer class="note">WalletX is an educational simulation. It is not a bank, payment service, or secure financial product.</footer>
+</div>
+<script>
+const STORAGE_KEY = "walletx_demo_v1";
+let authMode = "login";
+let currentUser = null;
+
+function readStore(){
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {users:{}, session:null}; }
+  catch(e){ return {users:{}, session:null}; }
+}
+function saveStore(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function money(value){ return new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(value); }
+function safeText(value){ return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function showAuthMode(mode){
+  authMode = mode;
+  document.getElementById("nameField").classList.toggle("hidden", mode === "login");
+  document.getElementById("authSubmit").textContent = mode === "login" ? "Log in" : "Create demo account";
+  document.getElementById("loginTab").classList.toggle("secondary", mode !== "login");
+  document.getElementById("registerTab").classList.toggle("secondary", mode !== "register");
+  document.getElementById("authMessage").textContent = "";
+}
+document.getElementById("authForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const username = document.getElementById("username").value.trim().toLowerCase();
+  const password = document.getElementById("password").value;
+  const displayName = document.getElementById("displayName").value.trim() || username;
+  const store = readStore();
+  const message = document.getElementById("authMessage");
+  message.classList.remove("error");
+  if(!/^[a-z0-9_]{3,24}$/.test(username)){
+    message.textContent = "Use 3–24 letters, numbers, or underscores for the username.";
+    message.classList.add("error"); return;
+  }
+  if(authMode === "register"){
+    if(store.users[username]){ message.textContent = "That username already exists on this browser."; message.classList.add("error"); return; }
+    store.users[username] = {displayName, password, balance:5000, totalAdded:5000, totalSent:0, transactions:[
+      {type:"bonus", title:"Welcome demo bonus", amount:5000, note:"Starting virtual balance", date:new Date().toISOString()}
+    ]};
+    store.session = username; saveStore(store); currentUser = username; showApp(); return;
+  }
+  const user = store.users[username];
+  if(!user || user.password !== password){ message.textContent = "Username or password is incorrect."; message.classList.add("error"); return; }
+  store.session = username; saveStore(store); currentUser = username; showApp();
+});
+function showApp(){
+  const store = readStore();
+  currentUser = currentUser || store.session;
+  if(!currentUser || !store.users[currentUser]){ showLoginScreen(); return; }
+  document.getElementById("authScreen").classList.add("hidden");
+  document.getElementById("appScreen").classList.remove("hidden");
+  document.getElementById("welcomeName").textContent = store.users[currentUser].displayName;
+  renderWallet(); openView("home");
+}
+function showLoginScreen(){
+  currentUser = null;
+  document.getElementById("authScreen").classList.remove("hidden");
+  document.getElementById("appScreen").classList.add("hidden");
+}
+function logout(){
+  const store=readStore(); store.session=null; saveStore(store); showLoginScreen();
+  document.getElementById("password").value="";
+}
+function getUser(){ const store=readStore(); return {store,user:store.users[currentUser]}; }
+function renderWallet(){
+  const {user}=getUser(); if(!user)return;
+  document.getElementById("balance").textContent=money(user.balance);
+  document.getElementById("totalAdded").textContent=money(user.totalAdded);
+  document.getElementById("totalSent").textContent=money(user.totalSent);
+  document.getElementById("txCount").textContent=user.transactions.length;
+  const sorted=[...user.transactions].reverse();
+  document.getElementById("recentList").innerHTML=renderTransactions(sorted.slice(0,4));
+  document.getElementById("historyList").innerHTML=renderTransactions(sorted);
+}
+function renderTransactions(items){
+  if(!items.length)return '<div class="empty">No transactions yet. Add virtual money or try a simulated payment.</div>';
+  return items.map(tx=>{
+    const incoming=["add","bonus"].includes(tx.type);
+    const icon=incoming?"＋":"↗";
+    const sign=incoming?"+":"−";
+    const cls=incoming?"positive":"negative";
+    const date=new Date(tx.date).toLocaleString();
+    return `<div class="transaction"><div class="tx-icon">${icon}</div><div class="tx-main"><strong>${safeText(tx.title)}</strong><small>${safeText(tx.note||"")} · ${safeText(date)}</small></div><strong class="${cls}">${sign}${money(tx.amount)}</strong></div>`;
+  }).join("");
+}
+function openView(name){
+  document.querySelectorAll(".view").forEach(el=>el.classList.remove("active"));
+  const target=document.getElementById("view-"+name); if(target)target.classList.add("active");
+  document.querySelectorAll("[data-view]").forEach(btn=>btn.classList.toggle("active",btn.dataset.view===name));
+  if(name==="add")document.getElementById("addAmount").focus({preventScroll:true});
+}
+document.getElementById("addForm").addEventListener("submit",function(e){
+  e.preventDefault(); const amount=Number(document.getElementById("addAmount").value);
+  const message=document.getElementById("addMessage"); message.classList.remove("error");
+  if(!Number.isFinite(amount)||amount<1||amount>100000){message.textContent="Enter an amount from ₹1 to ₹1,00,000.";message.classList.add("error");return;}
+  const {store,user}=getUser(); user.balance+=amount; user.totalAdded+=amount;
+  user.transactions.push({type:"add",title:"Money added",amount,note:"Virtual deposit",date:new Date().toISOString()});
+  saveStore(store); this.reset(); message.textContent="Virtual money added successfully."; renderWallet();
+});
+document.getElementById("sendForm").addEventListener("submit",function(e){
+  e.preventDefault(); const recipient=document.getElementById("recipient").value.trim();
+  const amount=Number(document.getElementById("sendAmount").value);
+  const note=document.getElementById("sendNote").value.trim()||"Simulated transfer";
+  const message=document.getElementById("sendMessage"); message.classList.remove("error");
+  if(!recipient){message.textContent="Enter a recipient name.";message.classList.add("error");return;}
+  if(!Number.isFinite(amount)||amount<1||amount>100000){message.textContent="Enter an amount from ₹1 to ₹1,00,000.";message.classList.add("error");return;}
+  const {store,user}=getUser();
+  if(amount>user.balance){message.textContent="Insufficient demo balance. Add virtual money or enter a smaller amount.";message.classList.add("error");return;}
+  user.balance-=amount; user.totalSent+=amount;
+  user.transactions.push({type:"send",title:"Payment to "+recipient,amount,note,date:new Date().toISOString()});
+  saveStore(store); this.reset(); message.textContent="Simulated payment successful. No real money was transferred."; renderWallet();
+});
+function resetWallet(){
+  if(!confirm("Reset this wallet to ₹5,000 and clear its transaction history?"))return;
+  const {store,user}=getUser(); user.balance=5000;user.totalAdded=5000;user.totalSent=0;
+  user.transactions=[{type:"bonus",title:"Welcome demo bonus",amount:5000,note:"Starting virtual balance",date:new Date().toISOString()}];
+  saveStore(store);renderWallet();alert("Demo wallet reset.");
+}
+function exportHistory(){
+  const {user}=getUser(); if(!user)return;
+  const rows=[["Date","Type","Description","Note","Amount (INR)"],...user.transactions.map(tx=>[new Date(tx.date).toISOString(),tx.type,tx.title,tx.note,tx.amount])];
+  const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="walletx-transaction-history.csv";a.click();URL.revokeObjectURL(url);
+}
+(function init(){
+  const store=readStore();
+  if(store.session && store.users[store.session]){currentUser=store.session;showApp();}
+  else {showLoginScreen();showAuthMode("login");}
+})();
+</script>
+</body>
+</html>
